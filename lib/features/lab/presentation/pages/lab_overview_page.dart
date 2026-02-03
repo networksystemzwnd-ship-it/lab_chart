@@ -1,63 +1,66 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lab_chart/features/lab/domain/entities/lab_system.dart';
-import 'package:lab_chart/features/lab/domain/entities/student_assignment.dart';
+import 'package:lab_chart/features/lab/presentation/bloc/lab_bloc.dart';
+import 'package:lab_chart/features/lab/presentation/bloc/lab_state.dart';
 import 'package:lab_chart/features/lab/presentation/widgets/assignment_form.dart';
-
-import '../widgets/computer_system_card.dart';
-import '../widgets/teacher_legend.dart';
-// Import your Cubit/Bloc here
+import 'package:lab_chart/features/lab/presentation/widgets/computer_system_card.dart';
+import 'package:lab_chart/features/lab/presentation/widgets/teacher_legend.dart';
 
 class LabOverviewPage extends StatelessWidget {
-  const LabOverviewPage({Key? key}) : super(key: key);
+  const LabOverviewPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // MOCK DATA (In real app, get this from Bloc/Provider state)
-    final List<LabSystem> systems = _getMockSystems();
-    final Map<String, Color> legendData = {
-      'Mr. Smith': Colors.blueAccent,
-      'Ms. Johnson': Colors.green,
-      'Mrs. Davis': Colors.orangeAccent,
-    };
-
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("CS Lab - Floor 1"),
-        actions: [
-          IconButton(icon: const Icon(Icons.refresh), onPressed: () {}),
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 1. Legend Section
-            TeacherLegend(teacherColors: legendData),
-            const Divider(height: 30),
+      appBar: AppBar(title: const Text("CS Lab - Floor 1 s")),
 
-            // 2. Grid Section
-            Expanded(
-              child: GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3, // 3 Columns
-                  childAspectRatio: 1.0,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                ),
-                itemCount: systems.length,
-                itemBuilder: (context, index) {
-                  return ComputerSystemCard(
-                    system: systems[index],
-                    onTap: () {
-                      _showAssignmentDialog(context, systems[index]);
-                    },
-                  );
-                },
+      // Use BlocBuilder to listen to state changes
+      body: BlocBuilder<LabBloc, LabState>(
+        builder: (context, state) {
+          if (state is LabInitial) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (state is LabLoading) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (state is LabLoaded) {
+            return Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Pass dynamic color map from state
+                  TeacherLegend(teacherColors: state.teacherColorMap),
+                  const Divider(height: 30),
+
+                  Expanded(
+                    child: GridView.builder(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            childAspectRatio: 1.0,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                          ),
+                      itemCount: state.systems.length,
+                      itemBuilder: (context, index) {
+                        final system = state.systems[index];
+                        return ComputerSystemCard(
+                          system: system,
+                          onTap: () {
+                            _showAssignmentDialog(context, system);
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
+            );
+          } else if (state is LabError) {
+            return Center(child: Text('Here is the message ${state.message}'));
+          }
+          return const SizedBox.shrink();
+        },
       ),
     );
   }
@@ -66,28 +69,13 @@ class LabOverviewPage extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (ctx) => AssignmentForm(systemId: system.id),
-    );
-  }
-
-  // Mock Data Helper
-  List<LabSystem> _getMockSystems() {
-    return List.generate(12, (index) {
-      // Make every 3rd system occupied for demo
-      if (index % 3 == 0) {
-        return LabSystem(
-          id: '$index',
-          systemNumber: 'PC-${index + 1}',
-          currentAssignment: StudentAssignment(
-            studentName: "John Doe",
-            teacherName: "Mr. Smith",
-            teacherColor: Colors.blueAccent,
-            startTime: DateTime.now(),
-            endTime: DateTime.now().add(const Duration(hours: 1)),
-          ),
+      builder: (ctx) {
+        // IMPORTANT: Pass the existing Bloc to the BottomSheet
+        return BlocProvider.value(
+          value: BlocProvider.of<LabBloc>(context),
+          child: AssignmentForm(systemId: system.id),
         );
-      }
-      return LabSystem(id: '$index', systemNumber: 'PC-${index + 1}');
-    });
+      },
+    );
   }
 }

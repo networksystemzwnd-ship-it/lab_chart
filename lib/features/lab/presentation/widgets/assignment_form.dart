@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lab_chart/features/lab/presentation/bloc/lab_bloc.dart';
+import 'package:lab_chart/features/lab/presentation/bloc/lab_event.dart';
 
 class AssignmentForm extends StatefulWidget {
   final String systemId;
@@ -11,6 +14,7 @@ class AssignmentForm extends StatefulWidget {
 class _AssignmentFormState extends State<AssignmentForm> {
   final _formKey = GlobalKey<FormState>();
   String? _selectedTeacher;
+  final TextEditingController _nameController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +38,7 @@ class _AssignmentFormState extends State<AssignmentForm> {
             const SizedBox(height: 16),
 
             TextFormField(
+              controller: _nameController,
               decoration: const InputDecoration(
                 labelText: "Student Name",
                 border: OutlineInputBorder(),
@@ -61,8 +66,21 @@ class _AssignmentFormState extends State<AssignmentForm> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  // Call BLoC event here: context.read<LabBloc>().add(AssignStudentEvent(...));
-                  Navigator.pop(context);
+                  if (_formKey.currentState!.validate() &&
+                      _selectedTeacher != null) {
+                    // Dispatch Event
+                    context.read<LabBloc>().add(
+                      AssignStudent(
+                        systemId: widget.systemId,
+                        studentName: _nameController
+                            .text, // Assume you added a controller
+                        teacherName: _selectedTeacher!,
+                        startTime: DateTime.now(),
+                        endTime: DateTime.now().add(const Duration(hours: 1)),
+                      ),
+                    );
+                    Navigator.pop(context); // Close the sheet
+                  }
                 },
                 child: const Text("Save Assignment"),
               ),
