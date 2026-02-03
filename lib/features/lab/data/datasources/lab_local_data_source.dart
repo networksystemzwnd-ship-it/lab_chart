@@ -11,7 +11,7 @@ class LabLocalDataSourceImpl implements LabLocalDataSource {
   Future<List<LabSystemModel>> getLastSavedLabData() async {
     // If no data, return default list (your 12 empty PCs)
     return List.generate(
-      5,
+      22,
       (index) => LabSystemModel(id: '$index', systemNumber: 'PC-${index + 1}'),
     );
 

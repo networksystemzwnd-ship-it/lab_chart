@@ -23,35 +23,64 @@ class LabOverviewPage extends StatelessWidget {
           } else if (state is LabLoading) {
             return const Center(child: CircularProgressIndicator());
           } else if (state is LabLoaded) {
-            return Padding(
-              padding: const EdgeInsets.all(16.0),
+            // 1. Prepare the data
+            final systems = state.systems;
+            final int total = systems.length;
+            final int half = (total / 2).ceil();
+
+            // This ensures Column 1 has 1-11 and Column 2 has 12-22
+            final leftList = systems.sublist(0, half);
+            final rightList = systems.sublist(half).reversed;
+
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(12),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Pass dynamic color map from state
                   TeacherLegend(teacherColors: state.teacherColorMap),
                   const Divider(height: 30),
 
-                  Expanded(
-                    child: GridView.builder(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3,
-                            childAspectRatio: 1.0,
-                            crossAxisSpacing: 12,
-                            mainAxisSpacing: 12,
-                          ),
-                      itemCount: state.systems.length,
-                      itemBuilder: (context, index) {
-                        final system = state.systems[index];
-                        return ComputerSystemCard(
-                          system: system,
-                          onTap: () {
-                            _showAssignmentDialog(context, system);
-                          },
-                        );
-                      },
-                    ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // LEFT COLUMN (1 to 11)
+                      Expanded(
+                        child: Column(
+                          children: leftList
+                              .map(
+                                (system) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: ComputerSystemCard(
+                                    system: system,
+                                    onTap: () =>
+                                        _showAssignmentDialog(context, system),
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                        ),
+                      ),
+
+                      Spacer(flex: 2),
+
+                      // RIGHT COLUMN (12 to 22)
+                      Expanded(
+                        child: Column(
+                          children: rightList
+                              .map(
+                                (system) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: ComputerSystemCard(
+                                    system: system,
+                                    onTap: () =>
+                                        _showAssignmentDialog(context, system),
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

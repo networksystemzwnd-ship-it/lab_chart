@@ -39,6 +39,7 @@ class ComputerSystemCard extends StatelessWidget {
         ),
         padding: const EdgeInsets.all(12),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -51,7 +52,7 @@ class ComputerSystemCard extends StatelessWidget {
                 color: textColor,
               ),
             ),
-            const Spacer(),
+            SizedBox(height: 10, width: 10),
             // Student Details (if occupied)
             if (isOccupied) ...[
               Text(
