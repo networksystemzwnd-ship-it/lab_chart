@@ -52,9 +52,13 @@ class _AssignmentFormState extends State<AssignmentForm> {
                 border: OutlineInputBorder(),
               ),
               items: [
-                'Mr. Smith',
-                'Ms. Johnson',
-                'Mrs. Davis',
+                'Teacher 1',
+                'Teacher 2',
+                'Teacher 3',
+                'Teacher 4',
+                'Teacher 5',
+                'Teacher 6',
+                'Teacher 7',
               ].map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
               onChanged: (val) => setState(() => _selectedTeacher = val),
             ),
@@ -72,8 +76,7 @@ class _AssignmentFormState extends State<AssignmentForm> {
                     context.read<LabBloc>().add(
                       AssignStudent(
                         systemId: widget.systemId,
-                        studentName: _nameController
-                            .text, // Assume you added a controller
+                        studentName: _nameController.text,
                         teacherName: _selectedTeacher!,
                         startTime: DateTime.now(),
                         endTime: DateTime.now().add(const Duration(hours: 1)),

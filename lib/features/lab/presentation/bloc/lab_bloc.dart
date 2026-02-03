@@ -12,9 +12,13 @@ class LabBloc extends Bloc<LabEvent, LabState> {
 
   // Hardcoded Logic for Teacher Colors (In real app, this might come from API)
   final Map<String, Color> _teacherColors = {
-    'Mr. Smith': Colors.blueAccent,
-    'Ms. Johnson': Colors.green,
-    'Mrs. Davis': Colors.orangeAccent,
+    'Teacher 1': Colors.blueAccent,
+    'Teacher 2': Colors.green,
+    'Teacher 3': Colors.orange,
+    'Teacher 4': Colors.yellow,
+    'Teacher 5': Colors.cyan,
+    'Teacher 6': Colors.deepOrange,
+    'Teacher 7': Colors.red,
   };
 
   // DEPEND ON THE CONTRACT, NOT THE IMPLEMENTATION

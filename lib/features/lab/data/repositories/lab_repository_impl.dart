@@ -16,7 +16,9 @@ class LabRepositoryImpl implements LabRepository {
       final models = await localDataSource.getLastSavedLabData();
 
       // 2. Convert Models -> Entities (if needed)
-      return models;
+      return models
+          .map((ls) => LabSystem(id: ls.id, systemNumber: ls.systemNumber))
+          .toList();
     } catch (e) {
       // Handle DB errors
       throw Exception("Failed to load lab data");
