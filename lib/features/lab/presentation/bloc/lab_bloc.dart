@@ -57,18 +57,21 @@ class LabBloc extends Bloc<LabEvent, LabState> {
         endTime: event.endTime,
       );
 
-      // 3. Update the specific system in the list
-      // Note: We create a NEW LabSystem object because State must be immutable
-      _systems[index] = LabSystem(
+      // 3. Create a NEW list instance immediately
+      final updatedSystems = List<LabSystem>.from(_systems);
+
+      // 4. Update the item in the NEW list
+      updatedSystems[index] = LabSystem(
         id: _systems[index].id,
         systemNumber: _systems[index].systemNumber,
         currentAssignment: newAssignment,
       );
 
-      // 4. Emit new state with updated list
+      // 5. Update your private variable and emit the NEW list
+      _systems = updatedSystems;
       emit(
         LabLoaded(
-          systems: List.from(_systems),
+          systems: _systems, // Already a new instance from List.from
           teacherColorMap: _teacherColors,
         ),
       );
