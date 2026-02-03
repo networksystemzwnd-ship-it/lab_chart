@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lab_chart/features/lab/domain/repositories/lab_repository.dart';
 
 import '../../domain/entities/lab_system.dart';
 import '../../domain/entities/student_assignment.dart';
@@ -7,7 +8,6 @@ import 'lab_event.dart';
 import 'lab_state.dart';
 
 class LabBloc extends Bloc<LabEvent, LabState> {
-  // Mocking a data source for this example
   List<LabSystem> _systems = [];
 
   // Hardcoded Logic for Teacher Colors (In real app, this might come from API)
@@ -17,26 +17,24 @@ class LabBloc extends Bloc<LabEvent, LabState> {
     'Mrs. Davis': Colors.orangeAccent,
   };
 
-  LabBloc() : super(LabInitial()) {
+  // DEPEND ON THE CONTRACT, NOT THE IMPLEMENTATION
+  final LabRepository labRepository;
+
+  LabBloc({required this.labRepository}) : super(LabInitial()) {
     on<LoadLabSystems>(_onLoadSystems);
     on<AssignStudent>(_onAssignStudent);
   }
 
   void _onLoadSystems(LoadLabSystems event, Emitter<LabState> emit) async {
     emit(LabLoading());
+    try {
+      // Call the repository
+      _systems = await labRepository.getLabSystems();
 
-    // Simulate API delay
-    await Future.delayed(const Duration(seconds: 1));
-
-    // Initialize mock systems (12 PCs)
-    _systems = List.generate(
-      12,
-      (index) => LabSystem(id: '$index', systemNumber: 'PC-${index + 1}'),
-    );
-
-    emit(
-      LabLoaded(systems: List.from(_systems), teacherColorMap: _teacherColors),
-    );
+      emit(LabLoaded(systems: _systems, teacherColorMap: _teacherColors));
+    } catch (e) {
+      emit(LabError("Failed to fetch data"));
+    }
   }
 
   void _onAssignStudent(AssignStudent event, Emitter<LabState> emit) {
@@ -73,4 +71,3 @@ class LabBloc extends Bloc<LabEvent, LabState> {
     }
   }
 }
-
