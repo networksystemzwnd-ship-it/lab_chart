@@ -14,80 +14,147 @@ class LabOverviewPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("CS Lab - Floor 1 s")),
-
-      // Use BlocBuilder to listen to state changes
       body: BlocBuilder<LabBloc, LabState>(
         builder: (context, state) {
-          if (state is LabInitial) {
+          if (state is LabInitial || state is LabLoading) {
             return const Center(child: CircularProgressIndicator());
-          } else if (state is LabLoading) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (state is LabLoaded) {
-            // 1. Prepare the data
+          }
+
+          if (state is LabLoaded) {
             final systems = state.systems;
-            final int total = systems.length;
-            final int half = (total / 2).ceil();
 
-            // This ensures Column 1 has 1-11 and Column 2 has 12-22
-            final leftList = systems.sublist(0, half);
-            final rightList = systems.sublist(half).reversed;
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                final isDesktop = constraints.maxWidth >= 1000;
 
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                children: [
-                  // Pass dynamic color map from state
-                  TeacherLegend(teacherColors: state.teacherColorMap),
-                  const Divider(height: 30),
+                final int total = systems.length;
+                final int half = (total / 2).ceil();
 
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                // Desktop logic
+                final leftList = systems.sublist(0, half);
+                final rightList = systems.sublist(half);
+
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
                     children: [
-                      // LEFT COLUMN (1 to 11)
-                      Expanded(
-                        child: Column(
-                          children: leftList
-                              .map(
-                                (system) => Padding(
-                                  padding: const EdgeInsets.only(bottom: 12),
-                                  child: ComputerSystemCard(
-                                    system: system,
-                                    onTap: () =>
-                                        _showAssignmentDialog(context, system),
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                        ),
-                      ),
+                      TeacherLegend(teacherColors: state.teacherColorMap),
+                      const Divider(height: 30),
 
-                      Spacer(flex: 2),
+                      // Mobile layout
+                      if (!isDesktop)
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // LEFT COLUMN
+                            Expanded(
+                              child: Column(
+                                children: leftList
+                                    .map(
+                                      (system) => Padding(
+                                        padding: const EdgeInsets.only(
+                                          bottom: 12,
+                                        ),
+                                        child: ComputerSystemCard(
+                                          system: system,
+                                          onTap: () => _showAssignmentDialog(
+                                            context,
+                                            system,
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                                    .toList(),
+                              ),
+                            ),
 
-                      // RIGHT COLUMN (12 to 22)
-                      Expanded(
-                        child: Column(
-                          children: rightList
-                              .map(
-                                (system) => Padding(
-                                  padding: const EdgeInsets.only(bottom: 12),
-                                  child: ComputerSystemCard(
-                                    system: system,
-                                    onTap: () =>
-                                        _showAssignmentDialog(context, system),
-                                  ),
-                                ),
-                              )
-                              .toList(),
+                            Spacer(flex: 2),
+
+                            // RIGHT COLUMN
+                            Expanded(
+                              child: Column(
+                                children: rightList.reversed
+                                    .map(
+                                      (system) => Padding(
+                                        padding: const EdgeInsets.only(
+                                          bottom: 12,
+                                        ),
+                                        child: ComputerSystemCard(
+                                          system: system,
+                                          onTap: () => _showAssignmentDialog(
+                                            context,
+                                            system,
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                                    .toList(),
+                              ),
+                            ),
+                          ],
+                        )
+                      // Desktop layout
+                      else
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // LEFT COLUMN (reversed first half)
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: leftList.reversed
+                                  .map(
+                                    (system) => Padding(
+                                      padding: const EdgeInsets.only(
+                                        bottom: 12,
+                                      ),
+                                      child: ComputerSystemCard(
+                                        system: system,
+                                        onTap: () => _showAssignmentDialog(
+                                          context,
+                                          system,
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
+                            ),
+
+                            const SizedBox(height: 120),
+                            // RIGHT COLUMN (normal second half)
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: rightList
+                                  .map(
+                                    (system) => Padding(
+                                      padding: const EdgeInsets.only(
+                                        bottom: 12,
+                                      ),
+                                      child: ComputerSystemCard(
+                                        system: system,
+                                        onTap: () => _showAssignmentDialog(
+                                          context,
+                                          system,
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
+                            ),
+                          ],
                         ),
-                      ),
                     ],
                   ),
-                ],
-              ),
+                );
+              },
             );
-          } else if (state is LabError) {
+          }
+
+          if (state is LabError) {
             return Center(child: Text('Here is the message ${state.message}'));
           }
+
           return const SizedBox.shrink();
         },
       ),
@@ -99,7 +166,6 @@ class LabOverviewPage extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       builder: (ctx) {
-        // IMPORTANT: Pass the existing Bloc to the BottomSheet
         return BlocProvider.value(
           value: BlocProvider.of<LabBloc>(context),
           child: AssignmentForm(systemId: system.id),
