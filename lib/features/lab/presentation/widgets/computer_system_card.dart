@@ -21,7 +21,7 @@ class ComputerSystemCard extends StatelessWidget {
         ? system.currentAssignment!.teacherColor
         : Colors.grey[200];
 
-    final textColor = isOccupied ? Colors.white : Colors.black87;
+    final textColor = isOccupied ? Colors.white : Colors.black38;
 
     return GestureDetector(
       onTap: onTap,
