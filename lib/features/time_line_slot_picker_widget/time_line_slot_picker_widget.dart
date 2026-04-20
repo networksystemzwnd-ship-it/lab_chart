@@ -221,13 +221,16 @@ class _TimelineSlotPickerState extends State<TimelineSlotPicker> {
                       final x = boundaryPositions[i];
 
                       return Positioned(
-                        left: x - 12.5, // center adjust
-                        top: widget.labelSpacing,
-                        child: Text(
-                          _formatTime(boundaries[i]),
-                          style: const TextStyle(
-                            fontSize: 10,
-                            color: Colors.black54,
+                        left: x, // center adjust
+                        top: widget.labelSpacing - 2,
+                        child: RotatedBox(
+                          quarterTurns: 3, // 1 = 90°, 2 = 180°, 3 = 270°
+                          child: Text(
+                            _formatTime(boundaries[i]),
+                            style: const TextStyle(
+                              fontSize: 8,
+                              color: Colors.black54,
+                            ),
                           ),
                         ),
                       );
@@ -251,9 +254,13 @@ class _TimelineSlotPickerState extends State<TimelineSlotPicker> {
   }
 
   String _formatTime(DateTime time) {
-    final h = time.hour.toString().padLeft(2, '0');
-    final m = time.minute.toString().padLeft(2, '0');
-    return "$h:$m";
+    final hour = time.hour % 12 == 0 ? 12 : time.hour % 12;
+    final period = time.hour < 12 ? 'AM' : 'PM';
+    final minute = time.minute == 0
+        ? ''
+        : ':${time.minute.toString().padLeft(2, '0')}';
+
+    return '$hour$minute ${minute.isEmpty ? period : ''}';
   }
 
   String _formatDurationHM(Duration duration) {
