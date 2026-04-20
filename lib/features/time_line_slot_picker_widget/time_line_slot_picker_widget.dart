@@ -169,6 +169,7 @@ class _TimelineSlotPickerState extends State<TimelineSlotPicker> {
                 final slot = slots[index];
 
                 return GestureDetector(
+                  behavior: HitTestBehavior.opaque,
                   onTap: () => _onTap(index),
                   child: SizedBox(
                     width: widths[index],
@@ -214,22 +215,24 @@ class _TimelineSlotPickerState extends State<TimelineSlotPicker> {
 
             if (widget.showBoundaryLabels)
               Positioned.fill(
-                child: Stack(
-                  children: List.generate(boundaries.length, (i) {
-                    final x = boundaryPositions[i];
+                child: IgnorePointer(
+                  child: Stack(
+                    children: List.generate(boundaries.length, (i) {
+                      final x = boundaryPositions[i];
 
-                    return Positioned(
-                      left: x - 12.5, // center adjust
-                      top: widget.labelSpacing,
-                      child: Text(
-                        _formatTime(boundaries[i]),
-                        style: const TextStyle(
-                          fontSize: 10,
-                          color: Colors.black54,
+                      return Positioned(
+                        left: x - 12.5, // center adjust
+                        top: widget.labelSpacing,
+                        child: Text(
+                          _formatTime(boundaries[i]),
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: Colors.black54,
+                          ),
                         ),
-                      ),
-                    );
-                  }),
+                      );
+                    }),
+                  ),
                 ),
               ),
           ],
