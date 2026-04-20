@@ -6,6 +6,7 @@ import 'package:lab_chart/features/lab/presentation/bloc/lab_state.dart';
 import 'package:lab_chart/features/lab/presentation/widgets/assignment_form.dart';
 import 'package:lab_chart/features/lab/presentation/widgets/computer_system_card.dart';
 import 'package:lab_chart/features/lab/presentation/widgets/teacher_legend.dart';
+import 'package:lab_chart/features/time_line_slot_picker_widget/time_line_slot_picker_widget.dart';
 
 class LabOverviewPage extends StatelessWidget {
   const LabOverviewPage({super.key});
@@ -38,6 +39,24 @@ class LabOverviewPage extends StatelessWidget {
                 children: [
                   // Pass dynamic color map from state
                   TeacherLegend(teacherColors: state.teacherColorMap),
+                  const Divider(height: 30),
+
+                  TimelineSlotPicker(
+                    startTime: DateTime(2026, 1, 1, 9, 0),
+                    endTime: DateTime(2026, 1, 1, 17, 30),
+                    divisions: [
+                      Duration(minutes: 30),
+                      Duration(hours: 1),
+                      Duration(hours: 1),
+                      Duration(hours: 1),
+                      Duration(hours: 1),
+                      Duration(minutes: 30),
+                      Duration(hours: 1),
+                      Duration(hours: 1),
+                      Duration(hours: 1),
+                      Duration(minutes: 30),
+                    ],
+                  ),
                   const Divider(height: 30),
 
                   Row(
