@@ -38,7 +38,7 @@ class TimelineSlotPicker extends StatefulWidget {
     this.height = 20,
     this.backgroundColor = const Color(0xFFE0E0E0),
     this.highlightColor = Colors.blue,
-    this.dividerColor = Colors.black26,
+    this.dividerColor = const Color.fromARGB(255, 207, 207, 207),
     this.showLabels = false,
     this.showBoundaryLabels = true,
     this.labelSpacing = 3,
@@ -205,7 +205,7 @@ class _TimelineSlotPickerState extends State<TimelineSlotPicker> {
 
                         /// Disabled overlay
                         if (!slot.isEnabled)
-                          Container(color: Colors.transparent.withOpacity(0.4)),
+                          Container(color: Colors.transparent.withAlpha(110)),
                       ],
                     ),
                   ),
@@ -221,15 +221,18 @@ class _TimelineSlotPickerState extends State<TimelineSlotPicker> {
                       final x = boundaryPositions[i];
 
                       return Positioned(
-                        left: x, // center adjust
-                        top: widget.labelSpacing - 2,
+                        left: x,
+                        top: widget.height / 2,
+child: FractionalTranslation(
+                          translation: const Offset(-0.5, -0.5),
                         child: RotatedBox(
-                          quarterTurns: 3, // 1 = 90°, 2 = 180°, 3 = 270°
+                          quarterTurns: 1,
                           child: Text(
-                            _formatTime(boundaries[i]),
+                            formatDateTime(boundaries[i]),
                             style: const TextStyle(
                               fontSize: 8,
-                              color: Colors.black54,
+                              color: Colors.black87,
+                              ),
                             ),
                           ),
                         ),
