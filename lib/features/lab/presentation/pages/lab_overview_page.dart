@@ -77,9 +77,11 @@ class LabOverviewPage extends StatelessWidget {
                       Duration(hours: 1),
                       Duration(minutes: 30),
                     ],
+                    height: 60,
                     onChanged: (value) {
                       context.read<LabBloc>().add(SelectTimeSlot(selectedTimeSlot: value));
                     },
+                    showLabels: true,
                   ),
                   const Divider(height: 30),
 

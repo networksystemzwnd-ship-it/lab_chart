@@ -197,18 +197,36 @@ class _TimelineSlotPickerState extends State<TimelineSlotPicker> {
 
                         /// Label
                         if (widget.showLabels)
-                          Center(
-                            child: AnimatedDefaultTextStyle(
-                              duration: const Duration(milliseconds: 250),
-                              curve: Curves.easeInOutCubic,
-                              style: TextStyle(
+                          LayoutBuilder(
+                            builder: (context, constraints) {
+                              final bool hasEnoughSpace =
+                                  constraints.maxWidth > 80;
+                              // tweak threshold based on your UI
+
+                              final textStyle = TextStyle(
                                 fontSize: 11,
                                 color: index == selectedIndex
                                     ? Colors.white
                                     : Colors.black,
-                              ),
-                              child: Text(_formatDurationHM(slot.duration)),
-                            ),
+                              );
+
+                              return Center(
+                                child: AnimatedDefaultTextStyle(
+                                  duration: const Duration(milliseconds: 250),
+                                  curve: Curves.easeInOutCubic,
+                                  style: textStyle,
+                                  child: hasEnoughSpace
+                                      ? Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(_formatTime(slot.start)),
+                                            Text(_formatTime(slot.end)),
+                                          ],
+                                        )
+                                      : Text(_formatDurationHM(slot.duration)),
+                                ),
+                              );
+                            },
                           ),
 
                         /// Disabled overlay
@@ -231,7 +249,7 @@ class _TimelineSlotPickerState extends State<TimelineSlotPicker> {
                       return Positioned(
                         left: x,
                         top: widget.height / 2,
-                        child: FractionalTranslation( 
+                        child: FractionalTranslation(
                           translation: const Offset(-0.5, -0.5),
                           child: RotatedBox(
                             quarterTurns: 1,
