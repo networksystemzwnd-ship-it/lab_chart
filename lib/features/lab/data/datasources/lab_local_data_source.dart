@@ -1,28 +1,115 @@
+import 'package:lab_chart/features/lab/data/datasources/lab_storage_service.dart';
 import 'package:lab_chart/features/lab/data/models/lab_system_model.dart';
 
+/// Contract for local data source operations
+/// 
+/// SOLID Principles:
+/// - Interface Segregation: Focused on local persistence contracts
+/// - Dependency Inversion: Repository depends on abstraction
 abstract class LabLocalDataSource {
+  /// Retrieve the last saved lab data from local storage
   Future<List<LabSystemModel>> getLastSavedLabData();
+
+  /// Cache/Save lab systems to local storage
   Future<void> cacheLabData(List<LabSystemModel> systems);
+
+  /// Update a specific lab system in local storage
+  Future<void> updateLabSystem(LabSystemModel system);
+
+  /// Get a specific lab system by ID
+  Future<LabSystemModel?> getLabSystemById(String id);
+
+  /// Clear all cached data
+  Future<void> clearCache();
 }
 
+/// Implementation of local data source using Hive for persistence
+/// 
+/// SOLID Principles:
+/// - Single Responsibility: Handles only local data persistence
+/// - Open/Closed: Can be extended for other storage backends
+/// - Liskov Substitution: Proper implementation of LabLocalDataSource
+/// - Dependency Inversion: Depends on LabStorageService abstraction
 class LabLocalDataSourceImpl implements LabLocalDataSource {
-  // Example using a simple in-memory list or SharedPrefs/Hive
+  final LabStorageService storageService;
+
+  // Default lab systems (22 empty PCs as per requirements)
+  static const int _defaultSystemCount = 22;
+
+  LabLocalDataSourceImpl({required this.storageService});
+
+  /// Generate default empty lab systems
+  static List<LabSystemModel> _generateDefaultSystems() {
+    return List.generate(
+      _defaultSystemCount,
+      (index) => LabSystemModel(
+        id: 'lab_system_${index + 1}',
+        systemNumber: 'PC-${(index + 1).toString().padLeft(2, '0')}',
+        studentAssignments: [],
+      ),
+    );
+  }
+
   @override
   Future<List<LabSystemModel>> getLastSavedLabData() async {
-    // If no data, return default list (your 12 empty PCs)
-    return List.generate(
-      22,
-      (index) => LabSystemModel(id: '$index', systemNumber: 'PC-${index + 1}'),
-    );
+    try {
+      // Try to get cached data from storage
+      final cachedSystems = await storageService.getLabSystems();
 
-    // ACTUAL DB CALL GOES HERE
-    // e.g., return hiveBox.values.toList();
-    await Future.delayed(const Duration(milliseconds: 500)); // Simulate DB
-    return []; // Return empty or cached data
+      // If no cached data, return default systems and save them
+      if (cachedSystems.isEmpty) {
+        final defaultSystems = _generateDefaultSystems();
+        await cacheLabData(defaultSystems);
+        return defaultSystems;
+      }
+
+      return cachedSystems;
+    } catch (e) {
+      // Fallback: return default systems if storage fails
+      return _generateDefaultSystems();
+    }
   }
 
   @override
   Future<void> cacheLabData(List<LabSystemModel> systems) async {
-    // Save to DB
+    try {
+      await storageService.saveLabSystems(systems);
+    } catch (e) {
+      throw Exception('Failed to cache lab data: $e');
+    }
+  }
+
+  @override
+  Future<void> updateLabSystem(LabSystemModel system) async {
+    try {
+      final allSystems = await storageService.getLabSystems();
+      final index = allSystems.indexWhere((s) => s.id == system.id);
+
+      if (index == -1) {
+        throw Exception('Lab system with ID ${system.id} not found');
+      }
+
+      await storageService.saveLabSystem(system, index);
+    } catch (e) {
+      throw Exception('Failed to update lab system: $e');
+    }
+  }
+
+  @override
+  Future<LabSystemModel?> getLabSystemById(String id) async {
+    try {
+      return await storageService.getLabSystemById(id);
+    } catch (e) {
+      throw Exception('Failed to retrieve lab system: $e');
+    }
+  }
+
+  @override
+  Future<void> clearCache() async {
+    try {
+      await storageService.clearAll();
+    } catch (e) {
+      throw Exception('Failed to clear cache: $e');
+    }
   }
 }
