@@ -28,6 +28,8 @@ class LabBloc extends Bloc<LabEvent, LabState> {
   LabBloc({required this.labRepository}) : super(LabInitial()) {
     on<LoadLabSystems>(_onLoadSystems);
     on<AssignStudent>(_onAssignStudent);
+    on<UpdateStudentAssignment>(_onUpdateStudentAssignment);
+    on<DeleteStudentAssignment>(_onDeleteStudentAssignment);
     on<SelectTimeSlot>(_onSelectTimeSlot);
   }
 
@@ -64,31 +66,11 @@ class LabBloc extends Bloc<LabEvent, LabState> {
     }
   }
 
-  void _onAssignStudent(AssignStudent event, Emitter<LabState> emit) {
+  Future<void> _onAssignStudent(AssignStudent event, Emitter<LabState> emit) async {
     if (state is! LabLoaded) return;
 
     final currentState = state as LabLoaded;
 
-    // 1. Find the system index
-    final index = _systems.indexWhere((s) => s.id == event.systemId);
-    if (index == -1) {
-      emit(LabError("System not found"));
-      return;
-    }
-
-    // 2. Check for time slot conflicts
-    final hasConflict = _systems[index].studentAssignments.any(
-      (existing) =>
-          existing.endTime.isAfter(currentState.selectedTimeSlot.start) &&
-          existing.startTime.isBefore(currentState.selectedTimeSlot.end),
-    );
-
-    if (hasConflict) {
-      emit(LabError("Time slot conflict: another student is assigned during this period"));
-      return;
-    }
-
-    // 3. Create the new assignment object
     final newAssignment = StudentAssignment(
       studentName: event.studentName,
       teacherName: event.teacherName,
@@ -98,31 +80,128 @@ class LabBloc extends Bloc<LabEvent, LabState> {
       endTime: currentState.selectedTimeSlot.end,
     );
 
-    // 4. Create a NEW list instance with the updated assignments
-    final updatedAssignments =
-        List<StudentAssignment>.from(_systems[index].studentAssignments)
-          ..add(newAssignment);
+    // 1. Check for time slot conflicts
+    final index = _systems.indexWhere((s) => s.id == event.systemId);
+    if (index == -1) {
+      emit(
+        LabLoaded(
+          systems: currentState.systems,
+          teacherColorMap: currentState.teacherColorMap,
+          selectedTimeSlot: currentState.selectedTimeSlot,
+          message: "System not found",
+        ),
+      );
+      return;
+    }
 
-    // 5. Create a NEW system instance
-    final updatedSystem = LabSystem(
-      id: _systems[index].id,
-      systemNumber: _systems[index].systemNumber,
-      studentAssignments: updatedAssignments,
+    final hasConflict = _systems[index].studentAssignments.any(
+      (existing) =>
+          existing.endTime.isAfter(currentState.selectedTimeSlot.start) &&
+          existing.startTime.isBefore(currentState.selectedTimeSlot.end),
     );
 
-    // 6. Create a NEW systems list
-    final updatedSystems = List<LabSystem>.from(_systems)
-      ..[index] = updatedSystem;
-    _systems = updatedSystems;
+    if (hasConflict) {
+      emit(
+        LabLoaded(
+          systems: currentState.systems,
+          teacherColorMap: currentState.teacherColorMap,
+          selectedTimeSlot: currentState.selectedTimeSlot,
+          message: "Time slot conflict: another student is assigned during this period",
+        ),
+      );
+      return;
+    }
 
-    // 7. Emit the new state
-    emit(
-      LabLoaded(
-        systems: _systems,
-        teacherColorMap: _teacherColors,
-        selectedTimeSlot: currentState.selectedTimeSlot,
-      ),
-    );
+    try {
+      await labRepository.assignStudent(event.systemId, newAssignment);
+      _systems = await labRepository.getLabSystems();
+
+      emit(
+        LabLoaded(
+          systems: _systems,
+          teacherColorMap: _teacherColors,
+          selectedTimeSlot: currentState.selectedTimeSlot,
+        ),
+      );
+    } catch (e) {
+      emit(
+        LabLoaded(
+          systems: currentState.systems,
+          teacherColorMap: currentState.teacherColorMap,
+          selectedTimeSlot: currentState.selectedTimeSlot,
+          message: e.toString(),
+        ),
+      );
+    }
+  }
+
+  Future<void> _onUpdateStudentAssignment(
+    UpdateStudentAssignment event,
+    Emitter<LabState> emit,
+  ) async {
+    if (state is! LabLoaded) return;
+
+    final currentState = state as LabLoaded;
+
+    try {
+      await labRepository.updateStudentAssignment(
+        event.systemId,
+        event.oldAssignment,
+        event.updatedAssignment,
+      );
+      _systems = await labRepository.getLabSystems();
+
+      emit(
+        LabLoaded(
+          systems: _systems,
+          teacherColorMap: _teacherColors,
+          selectedTimeSlot: currentState.selectedTimeSlot,
+        ),
+      );
+    } catch (e) {
+      emit(
+        LabLoaded(
+          systems: currentState.systems,
+          teacherColorMap: currentState.teacherColorMap,
+          selectedTimeSlot: currentState.selectedTimeSlot,
+          message: e.toString(),
+        ),
+      );
+    }
+  }
+
+  Future<void> _onDeleteStudentAssignment(
+    DeleteStudentAssignment event,
+    Emitter<LabState> emit,
+  ) async {
+    if (state is! LabLoaded) return;
+
+    final currentState = state as LabLoaded;
+
+    try {
+      await labRepository.deleteStudentAssignment(
+        event.systemId,
+        event.assignment,
+      );
+      _systems = await labRepository.getLabSystems();
+
+      emit(
+        LabLoaded(
+          systems: _systems,
+          teacherColorMap: _teacherColors,
+          selectedTimeSlot: currentState.selectedTimeSlot,
+        ),
+      );
+    } catch (e) {
+      emit(
+        LabLoaded(
+          systems: currentState.systems,
+          teacherColorMap: currentState.teacherColorMap,
+          selectedTimeSlot: currentState.selectedTimeSlot,
+          message: e.toString(),
+        ),
+      );
+    }
   }
 
   void _onSelectTimeSlot(SelectTimeSlot event, Emitter<LabState> emit) {

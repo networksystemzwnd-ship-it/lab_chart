@@ -1,5 +1,6 @@
 import 'package:hive/hive.dart';
 import 'package:lab_chart/features/lab/data/models/lab_system_model.dart';
+import 'package:lab_chart/features/lab/data/models/student_assignment_model.dart';
 
 /// Handles all Hive storage operations
 /// 

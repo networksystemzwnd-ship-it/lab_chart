@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:lab_chart/features/lab/domain/entities/student_assignment.dart';
 import 'package:lab_chart/features/time_line_slot_picker_widget/time_line_slot_picker_widget.dart';
 
 abstract class LabEvent extends Equatable {
@@ -40,5 +41,33 @@ class SelectTimeSlot extends LabEvent {
 
   @override
   List<Object> get props => [selectedTimeSlot];
+}
+
+class UpdateStudentAssignment extends LabEvent {
+  final String systemId;
+  final StudentAssignment oldAssignment;
+  final StudentAssignment updatedAssignment;
+
+  const UpdateStudentAssignment({
+    required this.systemId,
+    required this.oldAssignment,
+    required this.updatedAssignment,
+  });
+
+  @override
+  List<Object> get props => [systemId, oldAssignment, updatedAssignment];
+}
+
+class DeleteStudentAssignment extends LabEvent {
+  final String systemId;
+  final StudentAssignment assignment;
+
+  const DeleteStudentAssignment({
+    required this.systemId,
+    required this.assignment,
+  });
+
+  @override
+  List<Object> get props => [systemId, assignment];
 }
 

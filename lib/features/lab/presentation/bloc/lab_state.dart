@@ -25,14 +25,18 @@ class LabLoaded extends LabState {
   // Selected Time slot;
   final TimeSlot selectedTimeSlot;
 
+  // Optional message to display without switching away from loaded UI
+  final String? message;
+
   const LabLoaded({
     required this.systems,
     required this.teacherColorMap,
     required this.selectedTimeSlot,
+    this.message,
   });
 
   @override
-  List<Object> get props => [systems, teacherColorMap, selectedTimeSlot];
+  List<Object> get props => [systems, teacherColorMap, selectedTimeSlot, message ?? ''];
 }
 
 class LabError extends LabState {

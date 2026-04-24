@@ -37,36 +37,79 @@ class LabRepositoryImpl implements LabRepository {
     StudentAssignment assignment,
   ) async {
     try {
-      // 1. Get the specific system from storage
-      final systemModel =
-          await localDataSource.getLabSystemById(systemId);
-
-      if (systemModel == null) {
-        throw Exception('Lab system with ID $systemId not found');
-      }
-
-      // 2. Convert assignment entity to model for persistence
-      final assignmentModel =
-          StudentAssignmentModel.fromEntity(assignment);
-
-      // 3. Create updated assignments list with new assignment
-      final updatedAssignments = [
-        ...systemModel.studentAssignments,
-        assignmentModel,
-      ];
-
-      // 4. Create updated system model
-      final updatedSystem = LabSystemModel(
-        id: systemModel.id,
-        systemNumber: systemModel.systemNumber,
-        studentAssignments: updatedAssignments,
-      );
-
-      // 5. Save updated system back to storage
-      await localDataSource.updateLabSystem(updatedSystem);
+      await _updateSystemAssignments(systemId, [assignment], add: true);
     } catch (e) {
       throw Exception("Failed to assign student: $e");
     }
+  }
+
+  @override
+  Future<void> updateStudentAssignment(
+    String systemId,
+    StudentAssignment oldAssignment,
+    StudentAssignment updatedAssignment,
+  ) async {
+    try {
+      await _updateSystemAssignments(
+        systemId,
+        [updatedAssignment],
+        replace: oldAssignment,
+      );
+    } catch (e) {
+      throw Exception("Failed to update student assignment: $e");
+    }
+  }
+
+  @override
+  Future<void> deleteStudentAssignment(
+    String systemId,
+    StudentAssignment assignment,
+  ) async {
+    try {
+      await _updateSystemAssignments(systemId, [assignment], remove: true);
+    } catch (e) {
+      throw Exception("Failed to delete student assignment: $e");
+    }
+  }
+
+  Future<void> _updateSystemAssignments(
+    String systemId,
+    List<StudentAssignment> assignments, {
+    bool add = false,
+    bool remove = false,
+    StudentAssignment? replace,
+  }) async {
+    final systemModel = await localDataSource.getLabSystemById(systemId);
+    if (systemModel == null) {
+      throw Exception('Lab system with ID $systemId not found');
+    }
+
+    final currentAssignments = List<StudentAssignmentModel>.from(systemModel.studentAssignments);
+    final assignmentModels = assignments
+        .map((assignment) => StudentAssignmentModel.fromEntity(assignment))
+        .toList();
+
+    if (remove) {
+      if (assignmentModels.isEmpty) return;
+      currentAssignments.removeWhere((existing) => existing == assignmentModels.first);
+    } else if (replace != null) {
+      final replacementModel = StudentAssignmentModel.fromEntity(replace);
+      final index = currentAssignments.indexWhere((existing) => existing == replacementModel);
+      if (index == -1) {
+        throw Exception('Existing assignment not found');
+      }
+      currentAssignments[index] = assignmentModels.first;
+    } else if (add) {
+      currentAssignments.addAll(assignmentModels);
+    }
+
+    final updatedSystem = LabSystemModel(
+      id: systemModel.id,
+      systemNumber: systemModel.systemNumber,
+      studentAssignments: currentAssignments,
+    );
+
+    await localDataSource.updateLabSystem(updatedSystem);
   }
 
   /// Sync all lab systems to local storage

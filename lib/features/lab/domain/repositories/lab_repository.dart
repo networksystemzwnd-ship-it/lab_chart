@@ -9,4 +9,17 @@ abstract class LabRepository {
 
   // Saves an assignment
   Future<void> assignStudent(String systemId, StudentAssignment assignment);
+
+  // Updates an existing assignment for a system
+  Future<void> updateStudentAssignment(
+    String systemId,
+    StudentAssignment oldAssignment,
+    StudentAssignment updatedAssignment,
+  );
+
+  // Deletes an assignment from a system
+  Future<void> deleteStudentAssignment(
+    String systemId,
+    StudentAssignment assignment,
+  );
 }

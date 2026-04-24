@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lab_chart/features/lab/domain/entities/lab_system.dart';
 import 'package:lab_chart/features/lab/presentation/bloc/lab_bloc.dart';
@@ -42,6 +43,23 @@ class LabOverviewPage extends StatelessWidget {
                 children: [
                   // Pass dynamic color map from state
                   TeacherLegend(teacherColors: state.teacherColorMap),
+                  if (state.message != null)
+                    Container(
+                      margin: const EdgeInsets.only(top: 12, bottom: 12),
+                      padding: const EdgeInsets.all(12),
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        state.message!,
+                        style: TextStyle(
+                          color: Colors.red.shade900,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
                   const Divider(height: 30),
 
                   TimelineSlotPicker(
@@ -85,9 +103,10 @@ class LabOverviewPage extends StatelessWidget {
                                           onTap: () => _showAssignmentDialog(
                                             context,
                                             system,
+                                            state.selectedTimeSlot,
+                                          ),
                                           ),
                                         ),
-                                      ),
                                     )
                                     .toList(),
                               ),
@@ -110,6 +129,7 @@ class LabOverviewPage extends StatelessWidget {
                                           onTap: () => _showAssignmentDialog(
                                             context,
                                             system,
+                                            state.selectedTimeSlot,
                                           ),
                                         ),
                                       ),
@@ -141,6 +161,7 @@ class LabOverviewPage extends StatelessWidget {
                                         onTap: () => _showAssignmentDialog(
                                           context,
                                           system,
+                                          state.selectedTimeSlot,
                                         ),
                                       ),
                                     ),
@@ -164,6 +185,7 @@ class LabOverviewPage extends StatelessWidget {
                                         onTap: () => _showAssignmentDialog(
                                           context,
                                           system,
+                                          state.selectedTimeSlot,
                                         ),
                                       ),
                                     ),
@@ -189,14 +211,28 @@ class LabOverviewPage extends StatelessWidget {
     );
   }
 
-  void _showAssignmentDialog(BuildContext context, LabSystem system) {
+  void _showAssignmentDialog(
+    BuildContext context,
+    LabSystem system,
+    TimeSlot selectedTimeSlot,
+  ) {
+    final currentAssignment = system.studentAssignments.firstWhereOrNull(
+      (assignment) =>
+          assignment.endTime.isAfter(selectedTimeSlot.start) &&
+          assignment.startTime.isBefore(selectedTimeSlot.end),
+    );
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       builder: (ctx) {
         return BlocProvider.value(
           value: BlocProvider.of<LabBloc>(context),
-          child: AssignmentForm(systemId: system.id),
+          child: AssignmentForm(
+            systemId: system.id,
+            selectedTimeSlot: selectedTimeSlot,
+            existingAssignment: currentAssignment,
+          ),
         );
       },
     );
