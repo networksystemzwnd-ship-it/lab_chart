@@ -5,7 +5,7 @@ import 'package:lab_chart/features/lab/presentation/bloc/lab_event.dart';
 
 class AssignmentForm extends StatefulWidget {
   final String systemId;
-  const AssignmentForm({Key? key, required this.systemId}) : super(key: key);
+  const AssignmentForm({super.key, required this.systemId});
 
   @override
   State<AssignmentForm> createState() => _AssignmentFormState();
@@ -77,9 +77,7 @@ class _AssignmentFormState extends State<AssignmentForm> {
                       AssignStudent(
                         systemId: widget.systemId,
                         studentName: _nameController.text,
-                        teacherName: _selectedTeacher!,
-                        startTime: DateTime.now(),
-                        endTime: DateTime.now().add(const Duration(hours: 1)),
+                        teacherName: _selectedTeacher!
                       ),
                     );
                     Navigator.pop(context); // Close the sheet

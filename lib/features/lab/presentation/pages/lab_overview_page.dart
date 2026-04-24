@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lab_chart/features/lab/domain/entities/lab_system.dart';
 import 'package:lab_chart/features/lab/presentation/bloc/lab_bloc.dart';
+import 'package:lab_chart/features/lab/presentation/bloc/lab_event.dart';
 import 'package:lab_chart/features/lab/presentation/bloc/lab_state.dart';
 import 'package:lab_chart/features/lab/presentation/widgets/assignment_form.dart';
 import 'package:lab_chart/features/lab/presentation/widgets/computer_system_card.dart';
@@ -58,6 +59,9 @@ class LabOverviewPage extends StatelessWidget {
                       Duration(hours: 1),
                       Duration(minutes: 30),
                     ],
+                    onChanged: (value) {
+                      context.read<LabBloc>().add(SelectTimeSlot(selectedTimeSlot: value));
+                    },
                   ),
                   const Divider(height: 30),
 
@@ -76,6 +80,7 @@ class LabOverviewPage extends StatelessWidget {
                                           bottom: 12,
                                         ),
                                         child: ComputerSystemCard(
+                                          timeslot: state.selectedTimeSlot,
                                           system: system,
                                           onTap: () => _showAssignmentDialog(
                                             context,
@@ -100,6 +105,7 @@ class LabOverviewPage extends StatelessWidget {
                                           bottom: 12,
                                         ),
                                         child: ComputerSystemCard(
+                                          timeslot: state.selectedTimeSlot,
                                           system: system,
                                           onTap: () => _showAssignmentDialog(
                                             context,
@@ -130,6 +136,7 @@ class LabOverviewPage extends StatelessWidget {
                                         bottom: 12,
                                       ),
                                       child: ComputerSystemCard(
+                                        timeslot: state.selectedTimeSlot,
                                         system: system,
                                         onTap: () => _showAssignmentDialog(
                                           context,
@@ -152,6 +159,7 @@ class LabOverviewPage extends StatelessWidget {
                                         bottom: 12,
                                       ),
                                       child: ComputerSystemCard(
+                                        timeslot: state.selectedTimeSlot,
                                         system: system,
                                         onTap: () => _showAssignmentDialog(
                                           context,

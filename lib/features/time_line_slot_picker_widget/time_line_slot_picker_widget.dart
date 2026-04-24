@@ -1,13 +1,21 @@
+import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 
-class TimeSlot {
+class TimeSlot extends Equatable {
   final DateTime start;
   final DateTime end;
   final bool isEnabled;
 
-  TimeSlot({required this.start, required this.end, this.isEnabled = true});
+  const TimeSlot({
+    required this.start,
+    required this.end,
+    this.isEnabled = true,
+  });
 
   Duration get duration => end.difference(start);
+
+  @override
+  List<Object> get props => [start, end, isEnabled];
 }
 
 class TimelineSlotPicker extends StatefulWidget {
@@ -223,15 +231,15 @@ class _TimelineSlotPickerState extends State<TimelineSlotPicker> {
                       return Positioned(
                         left: x,
                         top: widget.height / 2,
-child: FractionalTranslation(
+                        child: FractionalTranslation( 
                           translation: const Offset(-0.5, -0.5),
-                        child: RotatedBox(
-                          quarterTurns: 1,
-                          child: Text(
-                            formatDateTime(boundaries[i]),
-                            style: const TextStyle(
-                              fontSize: 8,
-                              color: Colors.black87,
+                          child: RotatedBox(
+                            quarterTurns: 1,
+                            child: Text(
+                              _formatTime(boundaries[i]),
+                              style: const TextStyle(
+                                fontSize: 8,
+                                color: Colors.black87,
                               ),
                             ),
                           ),

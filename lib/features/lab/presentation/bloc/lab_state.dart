@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:equatable/equatable.dart';
+import 'package:lab_chart/features/time_line_slot_picker_widget/time_line_slot_picker_widget.dart';
 
 import '../../domain/entities/lab_system.dart';
 
@@ -21,10 +22,17 @@ class LabLoaded extends LabState {
   // We keep the teacher color map here so the UI can draw the Legend easily
   final Map<String, Color> teacherColorMap;
 
-  const LabLoaded({required this.systems, required this.teacherColorMap});
+  // Selected Time slot;
+  final TimeSlot selectedTimeSlot;
+
+  const LabLoaded({
+    required this.systems,
+    required this.teacherColorMap,
+    required this.selectedTimeSlot,
+  });
 
   @override
-  List<Object> get props => [systems, teacherColorMap];
+  List<Object> get props => [systems, teacherColorMap, selectedTimeSlot];
 }
 
 class LabError extends LabState {

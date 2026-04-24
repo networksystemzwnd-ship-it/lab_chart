@@ -1,24 +1,39 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:lab_chart/features/lab/domain/entities/student_assignment.dart';
+import 'package:lab_chart/features/time_line_slot_picker_widget/time_line_slot_picker_widget.dart';
 
-import '../../domain/entities/lab_system.dart'; // Import your entities
+import '../../domain/entities/lab_system.dart';
 
 class ComputerSystemCard extends StatelessWidget {
   final LabSystem system;
+  final TimeSlot timeslot;
   final VoidCallback onTap;
 
   const ComputerSystemCard({
     super.key,
     required this.system,
+    required this.timeslot,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isOccupied = system.currentAssignment != null;
+    final isOccupied = system.studentAssignments.any((assign) {
+      return assign.endTime.isAfter(timeslot.start) &&
+          assign.startTime.isBefore(timeslot.end);
+    });
+
+    final StudentAssignment? currentAssignment = system.studentAssignments
+        .firstWhereOrNull(
+          (a) =>
+              a.endTime.isAfter(timeslot.start) &&
+              a.startTime.isBefore(timeslot.end),
+        );
 
     // Determine Color: Teacher's color if occupied, Grey if free
     final cardColor = isOccupied
-        ? system.currentAssignment!.teacherColor
+        ? currentAssignment!.teacherColor
         : Colors.grey[200];
 
     final textColor = isOccupied ? Colors.white : Colors.black38;
@@ -56,13 +71,13 @@ class ComputerSystemCard extends StatelessWidget {
             // Student Details (if occupied)
             if (isOccupied) ...[
               Text(
-                system.currentAssignment!.studentName,
+                currentAssignment!.studentName,
                 style: TextStyle(fontWeight: FontWeight.w600, color: textColor),
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 4),
               Text(
-                "${_formatTime(system.currentAssignment!.startTime)} - ${_formatTime(system.currentAssignment!.endTime)}",
+                "${_formatTime(currentAssignment!.startTime)} - ${_formatTime(currentAssignment!.endTime)}",
                 style: TextStyle(
                   fontSize: 12,
                   color: textColor.withOpacity(0.9),
