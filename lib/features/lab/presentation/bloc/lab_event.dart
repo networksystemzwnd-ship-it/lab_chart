@@ -27,7 +27,33 @@ class AddTeacher extends LabEvent {
   List<Object> get props => [name, color.value];
 }
 
-// 3. User fills out the form and clicks "Save"
+// 3. Edit an existing teacher's details
+class EditTeacher extends LabEvent {
+  final String originalName;
+  final String updatedName;
+  final Color updatedColor;
+
+  const EditTeacher({
+    required this.originalName,
+    required this.updatedName,
+    required this.updatedColor,
+  });
+
+  @override
+  List<Object> get props => [originalName, updatedName, updatedColor.value];
+}
+
+// 4. Remove an existing teacher from the allocation pool
+class RemoveTeacher extends LabEvent {
+  final String name;
+
+  const RemoveTeacher({required this.name});
+
+  @override
+  List<Object> get props => [name];
+}
+
+// 5. User fills out the form and clicks "Save"
 class AssignStudent extends LabEvent {
   final String systemId;
   final String studentName;

@@ -127,6 +127,38 @@ class LabStorageService {
     }
   }
 
+  /// Update an existing teacher record.
+  Future<void> updateTeacher(TeacherModel teacher, {required String originalName}) async {
+    try {
+      final teachers = _teachersBox.values.toList();
+      final index = teachers.indexWhere((entry) => entry.name == originalName);
+      if (index == -1) {
+        throw Exception('Teacher with name $originalName not found.');
+      }
+      if (originalName != teacher.name &&
+          teachers.any((entry) => entry.name == teacher.name)) {
+        throw Exception('Teacher with name ${teacher.name} already exists.');
+      }
+      await _teachersBox.putAt(index, teacher);
+    } catch (e) {
+      throw Exception('Failed to update teacher: $e');
+    }
+  }
+
+  /// Remove a teacher from storage.
+  Future<void> deleteTeacher(String name) async {
+    try {
+      final teachers = _teachersBox.values.toList();
+      final index = teachers.indexWhere((entry) => entry.name == name);
+      if (index == -1) {
+        throw Exception('Teacher with name $name not found.');
+      }
+      await _teachersBox.deleteAt(index);
+    } catch (e) {
+      throw Exception('Failed to delete teacher: $e');
+    }
+  }
+
   /// Get a teacher by name.
   Future<TeacherModel?> getTeacherByName(String name) async {
     try {

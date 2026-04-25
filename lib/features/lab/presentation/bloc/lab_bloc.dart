@@ -19,6 +19,8 @@ class LabBloc extends Bloc<LabEvent, LabState> {
   LabBloc({required this.labRepository}) : super(LabInitial()) {
     on<LoadLabSystems>(_onLoadSystems);
     on<AddTeacher>(_onAddTeacher);
+    on<EditTeacher>(_onEditTeacher);
+    on<RemoveTeacher>(_onRemoveTeacher);
     on<AssignStudent>(_onAssignStudent);
     on<UpdateStudentAssignment>(_onUpdateStudentAssignment);
     on<DeleteStudentAssignment>(_onDeleteStudentAssignment);
@@ -71,6 +73,91 @@ class LabBloc extends Bloc<LabEvent, LabState> {
 
     try {
       await labRepository.addTeacher(newTeacher);
+      _teachers = await labRepository.getTeachers();
+
+      emit(
+        LabLoaded(
+          systems: currentState.systems,
+          teachers: _teachers,
+          teacherColorMap: _teacherColorMapFromTeachers(_teachers),
+          selectedTimeSlot: currentState.selectedTimeSlot,
+        ),
+      );
+    } catch (e) {
+      emit(
+        LabLoaded(
+          systems: currentState.systems,
+          teachers: currentState.teachers,
+          teacherColorMap: currentState.teacherColorMap,
+          selectedTimeSlot: currentState.selectedTimeSlot,
+          message: e.toString(),
+        ),
+      );
+    }
+  }
+
+  Future<void> _onEditTeacher(EditTeacher event, Emitter<LabState> emit) async {
+    if (state is! LabLoaded) return;
+
+    final currentState = state as LabLoaded;
+    final updatedTeacher = Teacher(name: event.updatedName, color: event.updatedColor);
+
+    try {
+      await labRepository.updateTeacher(updatedTeacher, originalName: event.originalName);
+      _teachers = await labRepository.getTeachers();
+
+      var updatedSystems = _systems.map((system) {
+        final assignments = system.studentAssignments.map((assignment) {
+          if (assignment.teacherName == event.originalName) {
+            return StudentAssignment(
+              studentName: assignment.studentName,
+              teacherName: updatedTeacher.name,
+              teacherColor: updatedTeacher.color,
+              startTime: assignment.startTime,
+              endTime: assignment.endTime,
+            );
+          }
+          return assignment;
+        }).toList();
+
+        return LabSystem(
+          id: system.id,
+          systemNumber: system.systemNumber,
+          studentAssignments: assignments,
+        );
+      }).toList();
+
+      await labRepository.saveLabSystems(updatedSystems);
+      _systems = updatedSystems;
+
+      emit(
+        LabLoaded(
+          systems: _systems,
+          teachers: _teachers,
+          teacherColorMap: _teacherColorMapFromTeachers(_teachers),
+          selectedTimeSlot: currentState.selectedTimeSlot,
+        ),
+      );
+    } catch (e) {
+      emit(
+        LabLoaded(
+          systems: currentState.systems,
+          teachers: currentState.teachers,
+          teacherColorMap: currentState.teacherColorMap,
+          selectedTimeSlot: currentState.selectedTimeSlot,
+          message: e.toString(),
+        ),
+      );
+    }
+  }
+
+  Future<void> _onRemoveTeacher(RemoveTeacher event, Emitter<LabState> emit) async {
+    if (state is! LabLoaded) return;
+
+    final currentState = state as LabLoaded;
+
+    try {
+      await labRepository.deleteTeacher(event.name);
       _teachers = await labRepository.getTeachers();
 
       emit(

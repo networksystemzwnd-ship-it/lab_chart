@@ -3,12 +3,16 @@ import 'package:lab_chart/features/lab/domain/entities/teacher.dart';
 
 class TeacherCreationForm extends StatefulWidget {
   final List<Teacher> existingTeachers;
+  final Teacher? existingTeacher;
   final void Function(String name, Color color) onSave;
+  final void Function()? onDelete;
 
   const TeacherCreationForm({
     super.key,
     required this.existingTeachers,
     required this.onSave,
+    this.existingTeacher,
+    this.onDelete,
   });
 
   @override
@@ -19,6 +23,15 @@ class _TeacherCreationFormState extends State<TeacherCreationForm> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   Color _selectedColor = Colors.blueAccent;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.existingTeacher != null) {
+      _nameController.text = widget.existingTeacher!.name;
+      _selectedColor = widget.existingTeacher!.color;
+    }
+  }
 
   static const Map<String, Color> _colorOptions = {
     'Red': Colors.red,
@@ -39,7 +52,7 @@ class _TeacherCreationFormState extends State<TeacherCreationForm> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Create Teacher'),
+      title: Text(widget.existingTeacher == null ? 'Create Teacher' : 'Edit Teacher'),
       content: Form(
         key: _formKey,
         child: Column(
@@ -56,7 +69,10 @@ class _TeacherCreationFormState extends State<TeacherCreationForm> {
                   return 'Please enter a teacher name';
                 }
                 if (widget.existingTeachers.any(
-                  (teacher) => teacher.name.toLowerCase() == value.trim().toLowerCase(),
+                  (teacher) =>
+                      teacher.name.toLowerCase() == value.trim().toLowerCase() &&
+                      teacher.name.toLowerCase() !=
+                          widget.existingTeacher?.name.toLowerCase(),
                 )) {
                   return 'This teacher already exists';
                 }
@@ -90,6 +106,17 @@ class _TeacherCreationFormState extends State<TeacherCreationForm> {
         ),
       ),
       actions: [
+        if (widget.existingTeacher != null && widget.onDelete != null)
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              widget.onDelete?.call();
+            },
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Cancel'),
@@ -101,7 +128,7 @@ class _TeacherCreationFormState extends State<TeacherCreationForm> {
               Navigator.of(context).pop();
             }
           },
-          child: const Text('Save'),
+          child: Text(widget.existingTeacher == null ? 'Save' : 'Update'),
         ),
       ],
     );

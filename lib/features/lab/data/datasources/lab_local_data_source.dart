@@ -27,6 +27,12 @@ abstract class LabLocalDataSource {
   /// Add a teacher to the local store
   Future<void> addTeacher(TeacherModel teacher);
 
+  /// Update an existing teacher record
+  Future<void> updateTeacher(TeacherModel teacher, {required String originalName});
+
+  /// Delete a teacher from storage
+  Future<void> deleteTeacher(String name);
+
   /// Cache teacher list to local storage
   Future<void> cacheTeachers(List<TeacherModel> teachers);
 
@@ -111,6 +117,24 @@ class LabLocalDataSourceImpl implements LabLocalDataSource {
       await storageService.addTeacher(teacher);
     } catch (e) {
       throw Exception('Failed to add teacher: $e');
+    }
+  }
+
+  @override
+  Future<void> updateTeacher(TeacherModel teacher, {required String originalName}) async {
+    try {
+      await storageService.updateTeacher(teacher, originalName: originalName);
+    } catch (e) {
+      throw Exception('Failed to update teacher: $e');
+    }
+  }
+
+  @override
+  Future<void> deleteTeacher(String name) async {
+    try {
+      await storageService.deleteTeacher(name);
+    } catch (e) {
+      throw Exception('Failed to delete teacher: $e');
     }
   }
 

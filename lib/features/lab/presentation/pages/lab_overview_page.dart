@@ -7,8 +7,8 @@ import 'package:lab_chart/features/lab/presentation/bloc/lab_event.dart';
 import 'package:lab_chart/features/lab/presentation/bloc/lab_state.dart';
 import 'package:lab_chart/features/lab/presentation/widgets/assignment_form.dart';
 import 'package:lab_chart/features/lab/presentation/widgets/computer_system_card.dart';
-import 'package:lab_chart/features/lab/presentation/widgets/teacher_creation_form.dart';
 import 'package:lab_chart/features/lab/presentation/widgets/teacher_legend.dart';
+import 'package:lab_chart/features/lab/presentation/widgets/teacher_management_dialog.dart';
 
 import '../../../time_line_slot_picker_widget/time_line_slot_picker_widget.dart';
 import '../../domain/entities/teacher.dart';
@@ -218,9 +218,9 @@ class LabOverviewPage extends StatelessWidget {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showTeacherCreationDialog(context),
-        tooltip: 'Add Teacher',
-        child: const Icon(Icons.add),
+        onPressed: () => _showTeacherManagementDialog(context),
+        tooltip: 'Manage Teachers',
+        child: const Icon(Icons.group),
       ),
     );
   }
@@ -254,17 +254,29 @@ class LabOverviewPage extends StatelessWidget {
     );
   }
 
-  void _showTeacherCreationDialog(BuildContext context) {
+  void _showTeacherManagementDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (ctx) {
         return BlocBuilder<LabBloc, LabState>(
           builder: (context, state) {
             if (state is LabLoaded) {
-              return TeacherCreationForm(
-                existingTeachers: state.teachers,
-                onSave: (name, color) {
+              return TeacherManagementDialog(
+                teachers: state.teachers,
+                onCreate: (name, color) {
                   context.read<LabBloc>().add(AddTeacher(name: name, color: color));
+                },
+                onEdit: (originalName, name, color) {
+                  context.read<LabBloc>().add(
+                        EditTeacher(
+                          originalName: originalName,
+                          updatedName: name,
+                          updatedColor: color,
+                        ),
+                      );
+                },
+                onDelete: (name) {
+                  context.read<LabBloc>().add(RemoveTeacher(name: name));
                 },
               );
             }

@@ -14,6 +14,15 @@ abstract class LabRepository {
   // Creates a new teacher record for lab allocation
   Future<void> addTeacher(Teacher teacher);
 
+  // Updates an existing teacher record
+  Future<void> updateTeacher(Teacher teacher, {required String originalName});
+
+  // Deletes a teacher record
+  Future<void> deleteTeacher(String name);
+
+  // Persists lab system changes to storage
+  Future<void> saveLabSystems(List<LabSystem> systems);
+
   // Saves an assignment
   Future<void> assignStudent(String systemId, StudentAssignment assignment);
 

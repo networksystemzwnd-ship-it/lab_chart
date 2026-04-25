@@ -54,6 +54,35 @@ class LabRepositoryImpl implements LabRepository {
   }
 
   @override
+  Future<void> updateTeacher(Teacher teacher, {required String originalName}) async {
+    try {
+      final model = TeacherModel.fromEntity(teacher);
+      await localDataSource.updateTeacher(model, originalName: originalName);
+    } catch (e) {
+      throw Exception("Failed to update teacher: $e");
+    }
+  }
+
+  @override
+  Future<void> deleteTeacher(String name) async {
+    try {
+      await localDataSource.deleteTeacher(name);
+    } catch (e) {
+      throw Exception("Failed to delete teacher: $e");
+    }
+  }
+
+  @override
+  Future<void> saveLabSystems(List<LabSystem> systems) async {
+    try {
+      final models = systems.map((system) => LabSystemModel.fromEntity(system)).toList();
+      await localDataSource.cacheLabData(models);
+    } catch (e) {
+      throw Exception("Failed to save lab systems: $e");
+    }
+  }
+
+  @override
   Future<void> assignStudent(
     String systemId,
     StudentAssignment assignment,
@@ -134,18 +163,6 @@ class LabRepositoryImpl implements LabRepository {
     await localDataSource.updateLabSystem(updatedSystem);
   }
 
-  /// Sync all lab systems to local storage
-  /// Useful for initial load or refresh operations
-  Future<void> syncLabSystems(List<LabSystem> systems) async {
-    try {
-      final models = systems
-          .map((system) => LabSystemModel.fromEntity(system))
-          .toList();
-      await localDataSource.cacheLabData(models);
-    } catch (e) {
-      throw Exception("Failed to sync lab systems: $e");
-    }
-  }
 
   /// Clear all locally cached data
   /// Useful for logout or reset operations
