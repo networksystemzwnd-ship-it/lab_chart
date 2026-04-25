@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:equatable/equatable.dart';
+import 'package:lab_chart/features/lab/domain/entities/teacher.dart';
 import 'package:lab_chart/features/time_line_slot_picker_widget/time_line_slot_picker_widget.dart';
 
 import '../../domain/entities/lab_system.dart';
@@ -18,6 +19,7 @@ class LabLoading extends LabState {}
 
 class LabLoaded extends LabState {
   final List<LabSystem> systems;
+  final List<Teacher> teachers;
 
   // We keep the teacher color map here so the UI can draw the Legend easily
   final Map<String, Color> teacherColorMap;
@@ -30,13 +32,14 @@ class LabLoaded extends LabState {
 
   const LabLoaded({
     required this.systems,
+    required this.teachers,
     required this.teacherColorMap,
     required this.selectedTimeSlot,
     this.message,
   });
 
   @override
-  List<Object> get props => [systems, teacherColorMap, selectedTimeSlot, message ?? ''];
+  List<Object> get props => [systems, teachers, teacherColorMap, selectedTimeSlot, message ?? ''];
 }
 
 class LabError extends LabState {

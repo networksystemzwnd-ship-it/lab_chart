@@ -1,5 +1,7 @@
+import 'package:flutter/material.dart';
 import 'package:lab_chart/features/lab/data/datasources/lab_storage_service.dart';
 import 'package:lab_chart/features/lab/data/models/lab_system_model.dart';
+import 'package:lab_chart/features/lab/data/models/teacher_model.dart';
 
 /// Contract for local data source operations
 /// 
@@ -18,6 +20,15 @@ abstract class LabLocalDataSource {
 
   /// Get a specific lab system by ID
   Future<LabSystemModel?> getLabSystemById(String id);
+
+  /// Retrieve all saved teachers from local storage
+  Future<List<TeacherModel>> getTeachers();
+
+  /// Add a teacher to the local store
+  Future<void> addTeacher(TeacherModel teacher);
+
+  /// Cache teacher list to local storage
+  Future<void> cacheTeachers(List<TeacherModel> teachers);
 
   /// Clear all cached data
   Future<void> clearCache();
@@ -80,6 +91,39 @@ class LabLocalDataSourceImpl implements LabLocalDataSource {
   }
 
   @override
+  Future<List<TeacherModel>> getTeachers() async {
+    try {
+      final cachedTeachers = await storageService.getTeachers();
+      if (cachedTeachers.isEmpty) {
+        final defaultTeachers = _generateDefaultTeachers();
+        await cacheTeachers(defaultTeachers);
+        return defaultTeachers;
+      }
+      return cachedTeachers;
+    } catch (e) {
+      return _generateDefaultTeachers();
+    }
+  }
+
+  @override
+  Future<void> addTeacher(TeacherModel teacher) async {
+    try {
+      await storageService.addTeacher(teacher);
+    } catch (e) {
+      throw Exception('Failed to add teacher: $e');
+    }
+  }
+
+  @override
+  Future<void> cacheTeachers(List<TeacherModel> teachers) async {
+    try {
+      await storageService.saveTeachers(teachers);
+    } catch (e) {
+      throw Exception('Failed to cache teachers: $e');
+    }
+  }
+
+  @override
   Future<void> updateLabSystem(LabSystemModel system) async {
     try {
       final allSystems = await storageService.getLabSystems();
@@ -111,5 +155,16 @@ class LabLocalDataSourceImpl implements LabLocalDataSource {
     } catch (e) {
       throw Exception('Failed to clear cache: $e');
     }
+  }
+
+  static List<TeacherModel> _generateDefaultTeachers() {
+    return [
+      TeacherModel(name: 'Jiffry', color: Colors.red),
+      TeacherModel(name: 'Anandu', color: Colors.blueAccent),
+      TeacherModel(name: 'Farsana', color: Colors.green),
+      TeacherModel(name: 'Hadiya', color: Colors.deepPurple),
+      TeacherModel(name: 'Farshana', color: Colors.cyan),
+      TeacherModel(name: 'Afeef', color: Colors.amber),
+    ];
   }
 }

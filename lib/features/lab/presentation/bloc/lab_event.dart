@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:flutter/material.dart';
 import 'package:lab_chart/features/lab/domain/entities/student_assignment.dart';
 import 'package:lab_chart/features/time_line_slot_picker_widget/time_line_slot_picker_widget.dart';
 
@@ -12,7 +13,21 @@ abstract class LabEvent extends Equatable {
 // 1. Initial Load
 class LoadLabSystems extends LabEvent {}
 
-// 2. User fills out the form and clicks "Save"
+// 2. Add a new teacher to the allocation pool
+class AddTeacher extends LabEvent {
+  final String name;
+  final Color color;
+
+  const AddTeacher({
+    required this.name,
+    required this.color,
+  });
+
+  @override
+  List<Object> get props => [name, color.value];
+}
+
+// 3. User fills out the form and clicks "Save"
 class AssignStudent extends LabEvent {
   final String systemId;
   final String studentName;

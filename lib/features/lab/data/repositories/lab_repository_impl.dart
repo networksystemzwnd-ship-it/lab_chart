@@ -1,8 +1,10 @@
 import 'package:lab_chart/features/lab/data/datasources/lab_local_data_source.dart';
 import 'package:lab_chart/features/lab/data/models/lab_system_model.dart';
 import 'package:lab_chart/features/lab/data/models/student_assignment_model.dart';
+import 'package:lab_chart/features/lab/data/models/teacher_model.dart';
 import 'package:lab_chart/features/lab/domain/entities/lab_system.dart';
 import 'package:lab_chart/features/lab/domain/entities/student_assignment.dart';
+import 'package:lab_chart/features/lab/domain/entities/teacher.dart';
 import 'package:lab_chart/features/lab/domain/repositories/lab_repository.dart';
 
 /// Implementation of LabRepository using local data source
@@ -28,6 +30,26 @@ class LabRepositoryImpl implements LabRepository {
       return models.map((model) => model.toEntity()).toList();
     } catch (e) {
       throw Exception("Failed to load lab data: $e");
+    }
+  }
+
+  @override
+  Future<List<Teacher>> getTeachers() async {
+    try {
+      final models = await localDataSource.getTeachers();
+      return models.map((model) => model.toEntity()).toList();
+    } catch (e) {
+      throw Exception("Failed to load teacher data: $e");
+    }
+  }
+
+  @override
+  Future<void> addTeacher(Teacher teacher) async {
+    try {
+      final model = TeacherModel.fromEntity(teacher);
+      await localDataSource.addTeacher(model);
+    } catch (e) {
+      throw Exception("Failed to add teacher: $e");
     }
   }
 

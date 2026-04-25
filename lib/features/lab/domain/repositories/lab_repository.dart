@@ -1,4 +1,5 @@
 import 'package:lab_chart/features/lab/domain/entities/student_assignment.dart';
+import 'package:lab_chart/features/lab/domain/entities/teacher.dart';
 
 import '../entities/lab_system.dart';
 
@@ -6,6 +7,12 @@ import '../entities/lab_system.dart';
 abstract class LabRepository {
   // Returns a list of systems (or a specific Failure/Success type like Dartz)
   Future<List<LabSystem>> getLabSystems();
+
+  // Returns the list of teachers that can be allocated
+  Future<List<Teacher>> getTeachers();
+
+  // Creates a new teacher record for lab allocation
+  Future<void> addTeacher(Teacher teacher);
 
   // Saves an assignment
   Future<void> assignStudent(String systemId, StudentAssignment assignment);

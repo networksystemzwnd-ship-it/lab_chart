@@ -7,8 +7,11 @@ import 'package:lab_chart/features/lab/presentation/bloc/lab_event.dart';
 import 'package:lab_chart/features/lab/presentation/bloc/lab_state.dart';
 import 'package:lab_chart/features/lab/presentation/widgets/assignment_form.dart';
 import 'package:lab_chart/features/lab/presentation/widgets/computer_system_card.dart';
+import 'package:lab_chart/features/lab/presentation/widgets/teacher_creation_form.dart';
 import 'package:lab_chart/features/lab/presentation/widgets/teacher_legend.dart';
-import 'package:lab_chart/features/time_line_slot_picker_widget/time_line_slot_picker_widget.dart';
+
+import '../../../time_line_slot_picker_widget/time_line_slot_picker_widget.dart';
+import '../../domain/entities/teacher.dart';
 
 class LabOverviewPage extends StatelessWidget {
   const LabOverviewPage({super.key});
@@ -106,6 +109,7 @@ class LabOverviewPage extends StatelessWidget {
                                             context,
                                             system,
                                             state.selectedTimeSlot,
+                                            state.teachers,
                                           ),
                                           ),
                                         ),
@@ -132,6 +136,7 @@ class LabOverviewPage extends StatelessWidget {
                                             context,
                                             system,
                                             state.selectedTimeSlot,
+                                            state.teachers,
                                           ),
                                         ),
                                       ),
@@ -164,6 +169,7 @@ class LabOverviewPage extends StatelessWidget {
                                           context,
                                           system,
                                           state.selectedTimeSlot,
+                                          state.teachers,
                                         ),
                                       ),
                                     ),
@@ -188,6 +194,7 @@ class LabOverviewPage extends StatelessWidget {
                                           context,
                                           system,
                                           state.selectedTimeSlot,
+                                          state.teachers,
                                         ),
                                       ),
                                     ),
@@ -210,6 +217,11 @@ class LabOverviewPage extends StatelessWidget {
           return const SizedBox.shrink();
         },
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showTeacherCreationDialog(context),
+        tooltip: 'Add Teacher',
+        child: const Icon(Icons.add),
+      ),
     );
   }
 
@@ -217,6 +229,7 @@ class LabOverviewPage extends StatelessWidget {
     BuildContext context,
     LabSystem system,
     TimeSlot selectedTimeSlot,
+    List<Teacher> teachers,
   ) {
     final currentAssignment = system.studentAssignments.firstWhereOrNull(
       (assignment) =>
@@ -232,9 +245,31 @@ class LabOverviewPage extends StatelessWidget {
           value: BlocProvider.of<LabBloc>(context),
           child: AssignmentForm(
             systemId: system.id,
+            availableTeachers: teachers,
             selectedTimeSlot: selectedTimeSlot,
             existingAssignment: currentAssignment,
           ),
+        );
+      },
+    );
+  }
+
+  void _showTeacherCreationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return BlocBuilder<LabBloc, LabState>(
+          builder: (context, state) {
+            if (state is LabLoaded) {
+              return TeacherCreationForm(
+                existingTeachers: state.teachers,
+                onSave: (name, color) {
+                  context.read<LabBloc>().add(AddTeacher(name: name, color: color));
+                },
+              );
+            }
+            return const SizedBox.shrink();
+          },
         );
       },
     );

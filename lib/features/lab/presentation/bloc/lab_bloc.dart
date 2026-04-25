@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lab_chart/features/lab/domain/entities/teacher.dart';
 import 'package:lab_chart/features/lab/domain/repositories/lab_repository.dart';
 import 'package:lab_chart/features/time_line_slot_picker_widget/time_line_slot_picker_widget.dart';
 
@@ -10,34 +11,29 @@ import 'lab_state.dart';
 
 class LabBloc extends Bloc<LabEvent, LabState> {
   List<LabSystem> _systems = [];
-
-  // Hardcoded Logic for Teacher Colors (In real app, this might come from API)
-  final Map<String, Color> _teacherColors = {
-    'Teacher 1': Colors.blueAccent,
-    'Teacher 2': Colors.green,
-    'Teacher 3': Colors.orange,
-    'Teacher 4': Colors.yellow,
-    'Teacher 5': Colors.cyan,
-    'Teacher 6': Colors.deepOrange,
-    'Teacher 7': Colors.red,
-  };
+  List<Teacher> _teachers = [];
 
   // DEPEND ON THE CONTRACT, NOT THE IMPLEMENTATION
   final LabRepository labRepository;
 
   LabBloc({required this.labRepository}) : super(LabInitial()) {
     on<LoadLabSystems>(_onLoadSystems);
+    on<AddTeacher>(_onAddTeacher);
     on<AssignStudent>(_onAssignStudent);
     on<UpdateStudentAssignment>(_onUpdateStudentAssignment);
     on<DeleteStudentAssignment>(_onDeleteStudentAssignment);
     on<SelectTimeSlot>(_onSelectTimeSlot);
   }
 
+  Map<String, Color> _teacherColorMapFromTeachers(List<Teacher> teachers) {
+    return {for (final teacher in teachers) teacher.name: teacher.color};
+  }
+
   void _onLoadSystems(LoadLabSystems event, Emitter<LabState> emit) async {
     emit(LabLoading());
     try {
-      // Call the repository
       _systems = await labRepository.getLabSystems();
+      _teachers = await labRepository.getTeachers();
 
       // Initialize with current time rounded to nearest 30-minute interval
       final now = DateTime.now();
@@ -54,7 +50,8 @@ class LabBloc extends Bloc<LabEvent, LabState> {
       emit(
         LabLoaded(
           systems: _systems,
-          teacherColorMap: _teacherColors,
+          teachers: _teachers,
+          teacherColorMap: _teacherColorMapFromTeachers(_teachers),
           selectedTimeSlot: TimeSlot(
             start: initialStart,
             end: initialEnd,
@@ -63,6 +60,37 @@ class LabBloc extends Bloc<LabEvent, LabState> {
       );
     } catch (e) {
       emit(LabError("Failed to fetch data"));
+    }
+  }
+
+  Future<void> _onAddTeacher(AddTeacher event, Emitter<LabState> emit) async {
+    if (state is! LabLoaded) return;
+
+    final currentState = state as LabLoaded;
+    final newTeacher = Teacher(name: event.name, color: event.color);
+
+    try {
+      await labRepository.addTeacher(newTeacher);
+      _teachers = await labRepository.getTeachers();
+
+      emit(
+        LabLoaded(
+          systems: currentState.systems,
+          teachers: _teachers,
+          teacherColorMap: _teacherColorMapFromTeachers(_teachers),
+          selectedTimeSlot: currentState.selectedTimeSlot,
+        ),
+      );
+    } catch (e) {
+      emit(
+        LabLoaded(
+          systems: currentState.systems,
+          teachers: currentState.teachers,
+          teacherColorMap: currentState.teacherColorMap,
+          selectedTimeSlot: currentState.selectedTimeSlot,
+          message: e.toString(),
+        ),
+      );
     }
   }
 
@@ -75,7 +103,7 @@ class LabBloc extends Bloc<LabEvent, LabState> {
       studentName: event.studentName,
       teacherName: event.teacherName,
       teacherColor:
-          _teacherColors[event.teacherName] ?? Colors.grey,
+          currentState.teacherColorMap[event.teacherName] ?? Colors.grey,
       startTime: currentState.selectedTimeSlot.start,
       endTime: currentState.selectedTimeSlot.end,
     );
@@ -86,6 +114,7 @@ class LabBloc extends Bloc<LabEvent, LabState> {
       emit(
         LabLoaded(
           systems: currentState.systems,
+          teachers: currentState.teachers,
           teacherColorMap: currentState.teacherColorMap,
           selectedTimeSlot: currentState.selectedTimeSlot,
           message: "System not found",
@@ -104,6 +133,7 @@ class LabBloc extends Bloc<LabEvent, LabState> {
       emit(
         LabLoaded(
           systems: currentState.systems,
+          teachers: currentState.teachers,
           teacherColorMap: currentState.teacherColorMap,
           selectedTimeSlot: currentState.selectedTimeSlot,
           message: "Time slot conflict: another student is assigned during this period",
@@ -119,7 +149,8 @@ class LabBloc extends Bloc<LabEvent, LabState> {
       emit(
         LabLoaded(
           systems: _systems,
-          teacherColorMap: _teacherColors,
+          teachers: currentState.teachers,
+          teacherColorMap: currentState.teacherColorMap,
           selectedTimeSlot: currentState.selectedTimeSlot,
         ),
       );
@@ -127,6 +158,7 @@ class LabBloc extends Bloc<LabEvent, LabState> {
       emit(
         LabLoaded(
           systems: currentState.systems,
+          teachers: currentState.teachers,
           teacherColorMap: currentState.teacherColorMap,
           selectedTimeSlot: currentState.selectedTimeSlot,
           message: e.toString(),
@@ -154,7 +186,8 @@ class LabBloc extends Bloc<LabEvent, LabState> {
       emit(
         LabLoaded(
           systems: _systems,
-          teacherColorMap: _teacherColors,
+          teachers: currentState.teachers,
+          teacherColorMap: currentState.teacherColorMap,
           selectedTimeSlot: currentState.selectedTimeSlot,
         ),
       );
@@ -162,6 +195,7 @@ class LabBloc extends Bloc<LabEvent, LabState> {
       emit(
         LabLoaded(
           systems: currentState.systems,
+          teachers: currentState.teachers,
           teacherColorMap: currentState.teacherColorMap,
           selectedTimeSlot: currentState.selectedTimeSlot,
           message: e.toString(),
@@ -188,7 +222,8 @@ class LabBloc extends Bloc<LabEvent, LabState> {
       emit(
         LabLoaded(
           systems: _systems,
-          teacherColorMap: _teacherColors,
+          teachers: currentState.teachers,
+          teacherColorMap: currentState.teacherColorMap,
           selectedTimeSlot: currentState.selectedTimeSlot,
         ),
       );
@@ -196,6 +231,7 @@ class LabBloc extends Bloc<LabEvent, LabState> {
       emit(
         LabLoaded(
           systems: currentState.systems,
+          teachers: currentState.teachers,
           teacherColorMap: currentState.teacherColorMap,
           selectedTimeSlot: currentState.selectedTimeSlot,
           message: e.toString(),
@@ -217,6 +253,7 @@ class LabBloc extends Bloc<LabEvent, LabState> {
     emit(
       LabLoaded(
         systems: currentState.systems,
+        teachers: currentState.teachers,
         teacherColorMap: currentState.teacherColorMap,
         selectedTimeSlot: event.selectedTimeSlot,
       ),

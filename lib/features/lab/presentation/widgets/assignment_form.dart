@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lab_chart/features/lab/domain/entities/student_assignment.dart';
+import 'package:lab_chart/features/lab/domain/entities/teacher.dart';
 import 'package:lab_chart/features/lab/presentation/bloc/lab_bloc.dart';
 import 'package:lab_chart/features/lab/presentation/bloc/lab_event.dart';
 import 'package:lab_chart/features/time_line_slot_picker_widget/time_line_slot_picker_widget.dart';
@@ -8,11 +9,13 @@ import 'package:lab_chart/features/time_line_slot_picker_widget/time_line_slot_p
 class AssignmentForm extends StatefulWidget {
   final String systemId;
   final StudentAssignment? existingAssignment;
+  final List<Teacher> availableTeachers;
   final TimeSlot selectedTimeSlot;
 
   const AssignmentForm({
     super.key,
     required this.systemId,
+    required this.availableTeachers,
     required this.selectedTimeSlot,
     this.existingAssignment,
   });
@@ -43,6 +46,22 @@ class _AssignmentFormState extends State<AssignmentForm> {
 
   @override
   Widget build(BuildContext context) {
+    final availableTeacherOptions = [
+      ...widget.availableTeachers,
+    ];
+
+    if (widget.existingAssignment != null &&
+        !availableTeacherOptions.any((teacher) =>
+            teacher.name == widget.existingAssignment!.teacherName)) {
+      availableTeacherOptions.insert(
+        0,
+        Teacher(
+          name: widget.existingAssignment!.teacherName,
+          color: widget.existingAssignment!.teacherColor,
+        ),
+      );
+    }
+
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -78,7 +97,7 @@ class _AssignmentFormState extends State<AssignmentForm> {
             const SizedBox(height: 12),
 
             DropdownButtonFormField<String>(
-              value: _selectedTeacher,
+              initialValue: _selectedTeacher,
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please select a teacher';
@@ -89,15 +108,12 @@ class _AssignmentFormState extends State<AssignmentForm> {
                 labelText: "Select Teacher",
                 border: OutlineInputBorder(),
               ),
-              items: [
-                'Teacher 1',
-                'Teacher 2',
-                'Teacher 3',
-                'Teacher 4',
-                'Teacher 5',
-                'Teacher 6',
-                'Teacher 7',
-              ].map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
+              items: availableTeacherOptions
+                  .map((teacher) => DropdownMenuItem(
+                        value: teacher.name,
+                        child: Text(teacher.name),
+                      ))
+                  .toList(),
               onChanged: (val) => setState(() => _selectedTeacher = val),
             ),
             const SizedBox(height: 12),
@@ -114,10 +130,15 @@ class _AssignmentFormState extends State<AssignmentForm> {
                     onPressed: () {
                       if (_formKey.currentState!.validate() &&
                           _selectedTeacher != null) {
+                        final selectedTeacher = availableTeacherOptions.firstWhere(
+                          (teacher) => teacher.name == _selectedTeacher,
+                          orElse: () => Teacher(name: _selectedTeacher!, color: Colors.grey),
+                        );
+
                         final assignment = StudentAssignment(
                           studentName: _nameController.text.trim(),
-                          teacherName: _selectedTeacher!,
-                          teacherColor: _getTeacherColor(_selectedTeacher!),
+                          teacherName: selectedTeacher.name,
+                          teacherColor: selectedTeacher.color,
                           startTime: widget.selectedTimeSlot.start,
                           endTime: widget.selectedTimeSlot.end,
                         );
@@ -172,24 +193,11 @@ class _AssignmentFormState extends State<AssignmentForm> {
   }
 
   Color _getTeacherColor(String teacherName) {
-    switch (teacherName) {
-      case 'Teacher 1':
-        return Colors.blueAccent;
-      case 'Teacher 2':
-        return Colors.green;
-      case 'Teacher 3':
-        return Colors.orange;
-      case 'Teacher 4':
-        return Colors.yellow;
-      case 'Teacher 5':
-        return Colors.cyan;
-      case 'Teacher 6':
-        return Colors.deepOrange;
-      case 'Teacher 7':
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
+    final teacher = widget.availableTeachers.firstWhere(
+      (teacher) => teacher.name == teacherName,
+      orElse: () => Teacher(name: teacherName, color: Colors.grey),
+    );
+    return teacher.color;
   }
 
   String _formatTime(DateTime dt) {
